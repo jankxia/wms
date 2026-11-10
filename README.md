@@ -1,149 +1,64 @@
-# WMS 仓库管理系统
+# WMS 仓库管理系统（去条码 / Docker 化 / 修复版）
 
-## 项目简介
+基于 [chenbool/wms](https://github.com/chenbool/wms) 二次开发：ThinkPHP 5.0.24 + MySQL/MariaDB，前端 Bootstrap + jQuery + Avalon。
 
-简单的仓储管理系统，能对商品种类、商品库存、采购、货位、入库、出库、盘点等仓储动作和数据进行监控，提升WMS的管理效益。
+这个版本的定位很明确：**给不需要扫码枪、想直接在自己 NAS 上跑起来的中小仓库用**。
 
+## 主要变化
 
-## 系统演示
+| 方向 | 内容 |
+|---|---|
+| 去扫码 | 删除 `extend/Barcode.php`、`Instorage::barcode()`、`Outstorage::barcode()`，寄件页与打印模板里的条码图改显示单号；系统不再依赖扫码枪 |
+| 业务正确性 | 出入库全事务落库；出库前校验库存；删单据按明细冲销库存并记流水；单号留空自动生成 |
+| 新增能力 | 运营看板、库存台账、库存预警（每个产品可设预警下限） |
+| 安全 | 密码从 md5 升级到 `password_hash`（老密码登录时自动升级）、写操作 CSRF 校验、关闭调试与 trace、HttpOnly Cookie、登录失败 5 次锁 10 分钟、禁止删除超级管理员 |
+| 兼容性 | PHPExcel 全面适配 PHP 8（220+ 处花括号下标）、控制器直接返回数组不再 500、MariaDB 兼容 |
+| 部署 | 自带 `Dockerfile` + `docker-compose.yml`，首次启动自动建库/导基线/跑迁移；飞牛 NAS 一键安装，详见 [docs/部署到飞牛NAS.md](docs/部署到飞牛NAS.md) |
 
-<table>
-    <tr>
-        <td><img src="./demo/1.gif"/></td>
-        <td><img src="./demo/20171229163116.png" /></td>
-    </tr>
-    <tr>
-        <td><img src="./demo/20171229163127.png"/></td>
-        <td><img src="./demo/20171229163140.png" /></td>
-    </tr>
-    <tr>
-        <td><img src="./demo/20171229185301.png" /></td>
-        <td><img src="./demo/20171230124819.png" /></td>
-    </tr>
-</table>
+详细清单见 [docs/改造说明.md](docs/改造说明.md)。
 
-## 主要功能模块
+## 快速开始（Docker）
 
-| 模块 | 说明 |
-|------|------|
-| 采购管理 | 采购订单、供应商管理 |
-| 销售管理 | 销售订单、客户管理 |
-| 库位管理 | 库位设置、货位分配 |
-| 预警提示 | 库存预警、过期预警 |
-| 报表查询 | 库存状况、出入库统计 |
-| 系统管理 | 用户管理、角色权限 |
-| 财务管理 | 收款付款、成本核算 |
-| API接口 | 第三方平台接入 |
-| 语音播报 | 语音提示、语音播报 |
-| 设备管理 | 扫码枪、盘点机支持 |
+```bash
+docker compose up -d --build
+# 打开 http://服务器地址:80812
+```
 
-## 环境要求
+飞牛 NAS 图形界面步骤：见 [docs/部署到飞牛NAS.md](docs/部署到飞牛NAS.md)。
+不用 Docker 的手动部署：见 [install.md](install.md)。
 
-| 项目 | 要求 |
-|------|------|
-| PHP 版本 | >= 8.0.0 |
-| MySQL 版本 | >= 5.7 (推荐 8.0) |
-| Web 服务器 | Apache / Nginx |
-| 扩展要求 | mysqli, pdo, json, mbstring |
-
-## 安装部署
-
-### 1. 配置 Web 服务器
-
-将项目部署到 Web 服务器的根目录，入口文件位于 `public/index.php`
-
-### 2. 安装系统
-
-访问安装向导：`http://your-domain/install.php`
-
-填写数据库连接信息后完成安装。
-
-详细安装说明请参阅 [安装指南](install.md)
-
-## 默认账号
-
-| 类型 | 用户名 | 密码 |
-|------|--------|------|
-| 管理员 | admin | admin123 |
-
-## 在线演示
-
-访问地址：http://148.70.120.105:8002/login/index
-
-| 类型 | 账号 | 密码 |
-|------|------|------|
-| 普通用户 | admin | admin |
-| 管理员 | bool | admin |
-
-
-## 技术栈
-
-- 框架：ThinkPHP 5.1
-- PHP：>= 8.0
-- 数据库：MySQL 5.7+
-- 前端：Bootstrap + Xenon Theme
-- 条码：PhpCode128
+默认账号（演示数据）：`bool / admin`（超级管理员）、`admin / admin`（仓库管理角色）。**登录后第一件事改密码。**
 
 ## 目录结构
 
 ```
-wms/
-├── app/                    # 应用目录
-│   ├── controller/         # 控制器
-│   ├── model/              # 模型
-│   ├── service/            # 业务逻辑
-│   ├── view/               # 视图模板
-│   └── database.php        # 数据库配置
-├── public/                 # 公开入口
-│   ├── static/             # 静态资源
-│   ├── index.php           # 入口文件
-│   └── install.php         # 安装程序
-├── extend/                 # 扩展类库
-├── runtime/                # 运行时目录
-├── thinkphp/               # 框架核心
-├── demo/                   # 演示图片
-├── wms.sql                 # 数据库文件
-├── composer.json           # 依赖配置
-├── README.md               # 项目说明
-├── install.md              # 安装指南
-└── 开发说明.md             # 二次开发指南
+app/            控制器、服务层、模型、视图（单模块）
+  controller/   Base（鉴权 + CSRF）、Index（看板）、Product、Instorage、Outstorage、Stock、User、Role ...
+  service/      StockService（库存核心/流水/预警/看板）、Instorage/Outstorage/Product/Login/Csrf ...
+  view/         index(看板)、stock(台账/预警)、instorage/outstorage(单据与打印模板) ...
+bin/migrate.php 幂等数据库升级脚本（容器启动时自动执行）
+docker/         容器用的 php.ini、Apache vhost、entrypoint.sh
+docs/           部署与改造说明
+extend/Classes  PHPExcel（已适配 PHP 8）
+public/         Web 根目录（index.php、static、uploads）
+thinkphp/       框架（5.0.24，仅有 Response 一处小补丁）
+wms.sql         基线结构与演示数据
 ```
 
-## 二次开发
+## 环境要求
 
-详细二次开发文档请参阅 [开发说明.md](开发说明.md)，内容包括：
+- PHP ≥ 8.0（推荐 8.2/8.3），扩展：`pdo_mysql`、`mysqli`、`mbstring`、`gd`、`zip`
+- MySQL 5.7+ / MariaDB 10.3+
+- 站点根目录指向 `public/`，Apache 需 `mod_rewrite` + `AllowOverride All`
 
-- 项目架构说明（MVC + Service 模式）
-- 开发规范与命名规则
-- 模块开发教程（以客户管理为例）
-- 数据库操作指南
-- 视图模板语法
-- 权限系统详解
-- API开发示例
-- 常用功能代码片段
+## 数据库升级
 
-## QQ 交流群
+```bash
+DB_HOST=127.0.0.1 DB_PORT=3306 DB_NAME=wms DB_USER=root DB_PASS=*** php bin/migrate.php
+```
 
-QQ 群：785794314
+脚本幂等：补 `w_product.min_num`、建 `w_stock_log`、扩 `w_user.password`、新增「库存台账/库存预警」菜单并授权、可选重置管理员密码。
 
-![QQ群](./demo/qq.png)
+## 开发约定
 
-## 桌面版下载
-
-> 注：暂时只提供 Windows 版下载
-
-| 网盘 | 地址 | 密码 |
-|------|------|------|
-| 90网盘 | https://www.90pan.com/b1586379 | e717 |
-| 城通网盘 | https://t00y.com/file/23130714-415442373 | 396180 |
-
-## 更新日志
-
-### 2024-xx-xx
-- 升级到 ThinkPHP 5.1 最新版
-- 兼容 PHP 8.2+
-- UI 美化优化
-
-### 早期版本
-- 初始版本发布
-- 基础功能开发完成
+见 [开发说明.md](开发说明.md)。新增写操作请走 `Base` 的 CSRF 校验，改库存一律通过 `app\service\StockService`，避免出现账实不符。

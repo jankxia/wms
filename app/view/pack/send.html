@@ -187,7 +187,7 @@
 
                         </form>
                         <div class="col-xs-4">
-                            <img :attr="{src:barcode}" class="pull-right">
+                            <span class="pull-right text-muted">单号：<b :text="info.sn"></b></span>
                         </div>
 
                     </div>
@@ -269,7 +269,6 @@
 <script>
     var vm = avalon.define({
         $id: "app",
-        barcode: "",
         info: {
             sn: '',
             receiver_name: '',
@@ -287,9 +286,6 @@
             $.post("{:url('/Pack/getSn')}", { "sn": this.info.sn }, function (data) {
                 data.list = JSON.parse(data.list);
                 _this.info = data;
-                // console.log(data.list);
-                _this.barcode = "{:trim(url('/Instorage/barcode/sn/'),'.html') }" + _this.info.sn;
-                _this.getBarcode();
             }, "json");
         },
         isPrint: function () {

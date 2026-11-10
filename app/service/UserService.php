@@ -28,7 +28,7 @@ class UserService
     	(empty($data['role']) 		|| $data['role'] == '')		|| $where['role'] 		= 	$data['role'];
     	(empty($data['status']) 	|| $data['status'] == '')	|| $where['status'] 	= 	$data['status'];
     	(empty($data['company']) 	|| $data['company'] == '')	|| $where['company'] 	= 	$data['company'];
-    	empty($data['truename'])	|| $where['truename']		=	[ 'like','%'.$data['truename'] ];
+    	empty($data['truename'])	|| $where['truename']		=	[ 'like','%'.$data['truename'].'%' ];
     	empty($data['sn'])			|| $where['sn'] 			= 	$data['sn'];
 
         return User::where($where)->paginate(10);     
@@ -58,7 +58,7 @@ class UserService
 			$user->company 	= $param['company'];
 			$user->truename = $param['truename'];
 			$user->username = $param['sn'];
-			$user->password = md5($param['password']);
+			$user->password = password_hash($param['password'], PASSWORD_DEFAULT);
 			$user->add_time = time();
 
 			// 检测错误
@@ -96,7 +96,10 @@ class UserService
 			$user->company 	= $param['company'];
 			$user->truename = $param['truename'];
 			// $user->username = $param['username'];
-			$user->password = md5($param['password']);
+			// 只有填了新密码才更新，避免编辑资料时把密码改成空密码的 hash
+			if (!empty($param['password'])) {
+				$user->password = password_hash($param['password'], PASSWORD_DEFAULT);
+			}
 
 			// 检测错误
 			if( $user->save() ){
@@ -112,6 +115,9 @@ class UserService
     }
 
     public function delete($id){
+    	if (in_array((int) $id, (array) config('super_admin'), true)) {
+    		return ['error' => 100, 'msg' => '超级管理员账号不允许删除'];
+    	}
     	if( User::destroy($id) ){
     		return ['error'	=>	0,'msg'	=>	'删除成功'];
     	}else{

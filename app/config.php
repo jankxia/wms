@@ -16,10 +16,10 @@ return [
 
     // 应用命名空间
     'app_namespace'          => 'app',
-    // 应用调试模式
-    'app_debug'              => true,
-    // 应用Trace
-    'app_trace'              => true,
+    // 应用调试模式（生产环境请保持关闭，可通过环境变量 APP_DEBUG=true 临时打开）
+    'app_debug'              => (getenv('APP_DEBUG') === 'true' || getenv('APP_DEBUG') === '1'),
+    // 应用Trace（会把 SQL 与运行环境暴露在页面上，生产环境必须关闭）
+    'app_trace'              => false,
     // 应用模式状态
     'app_status'             => '',
     // 是否支持多模块
@@ -232,7 +232,7 @@ return [
         //  cookie 启用安全传输
         'secure'    => false,
         // httponly设置
-        'httponly'  => '',
+        'httponly'  => true,
         // 是否使用 setcookie
         'setcookie' => true,
     ],
@@ -245,4 +245,7 @@ return [
     ],
 
     'super_admin' => [1], // 超级管理员id
+
+    // 写操作 CSRF 校验开关（如二次开发时接口对接不便，可临时置 false）
+    'csrf_on'     => true,
 ];

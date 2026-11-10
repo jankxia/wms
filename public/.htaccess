@@ -1,3 +1,6 @@
+# 让 Apache 支持 /login/login 这类 PATH_INFO 形式的路由
+AcceptPathInfo On
+
 <IfModule mod_rewrite.c>
   Options +FollowSymlinks -Multiviews
   RewriteEngine On

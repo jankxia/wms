@@ -1,146 +1,84 @@
 {extend name="base"}
-	
-{block name="title"}首页 - 仓库管理系统{/block}
+
+{block name="title"}运营看板 - 仓库管理系统{/block}
 
 {block name="style"}
 <style>
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 20px;
-        border-radius: 5px;
-        color: #fff;
-        margin-bottom: 20px;
-    }
-    
-    .dashboard-header h2 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 600;
-    }
-    
-    .dashboard-header p {
-        margin: 5px 0 0 0;
-        opacity: 0.9;
-        font-size: 13px;
-    }
-    
-    .xe-widget {
-        margin-bottom: 15px;
-    }
-    
-    .info-panel {
+    .kpi-card {
         background: #fff;
-        border-radius: 5px;
-        padding: 15px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
+        border-radius: 6px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        margin-bottom: 16px;
+        border-left: 4px solid #4b7bec;
     }
-    
-    .info-panel h4 {
-        margin: 0 0 12px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #f0f0f0;
-        color: #323232;
-        font-size: 15px;
-        font-weight: 600;
-    }
-    
-    .info-item {
-        margin-bottom: 8px;
-        padding: 6px 8px;
-        background: #f9f9f9;
-        border-radius: 3px;
-        font-size: 13px;
-    }
-    
-    .info-item label {
-        font-weight: 600;
-        color: #555;
-        margin-right: 8px;
-        min-width: 70px;
-        display: inline-block;
-    }
-    
-    .info-item span {
-        color: #333;
-    }
-    
-    .extension-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 8px;
-        margin-top: 10px;
-    }
-    
-    .extension-item {
-        padding: 8px;
-        background: #f8f8f8;
-        border-radius: 3px;
-        text-align: center;
-        transition: all 0.3s ease;
-        font-size: 12px;
-    }
-    
-    .extension-item:hover {
-        background: #f0f0f0;
-        transform: translateY(-2px);
-    }
-    
-    .extension-item i {
-        margin-right: 4px;
-    }
-    
-    .extension-item.success {
-        background: #e8f5e9;
-        color: #2e7d32;
-    }
-    
-    .extension-item.danger {
-        background: #ffebee;
-        color: #c62828;
-    }
-    
-    .quick-link-item {
-        display: block;
-        padding: 12px;
-        background: #fff;
-        border: 1px solid #ebebeb;
-        border-radius: 5px;
-        text-align: center;
-        transition: all 0.3s ease;
-        margin-bottom: 15px;
-    }
-    
-    .quick-link-item:hover {
-        border-color: #667eea;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-        transform: translateY(-3px);
-    }
-    
-    .quick-link-item i {
-        font-size: 28px;
-        margin-bottom: 8px;
-        display: block;
-    }
-    
-    .quick-link-item span {
-        font-size: 13px;
-        color: #555;
-    }
+    .kpi-card .kpi-label { color: #888; font-size: 13px; }
+    .kpi-card .kpi-value { font-size: 26px; font-weight: 700; color: #2c3e50; line-height: 1.3; }
+    .kpi-card .kpi-unit { font-size: 12px; color: #999; margin-left: 4px; }
+    .kpi-card .kpi-icon { float: right; font-size: 32px; color: #dfe6f2; }
+    .kpi-card.green  { border-left-color: #27ae60; }
+    .kpi-card.orange { border-left-color: #f39c12; }
+    .kpi-card.red    { border-left-color: #c0392b; }
+    .kpi-card.gray   { border-left-color: #7f8c8d; }
+
+    .panel-mini { background: #fff; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 18px; }
+    .panel-mini .pm-head { padding: 12px 16px; border-bottom: 1px solid #f0f2f5; font-weight: 600; color: #34495e; }
+    .panel-mini .pm-head a { float: right; font-weight: 400; font-size: 12px; color: #4b7bec; }
+    .panel-mini .pm-body { padding: 0; }
+    .panel-mini table { margin-bottom: 0; }
+    .panel-mini th, .panel-mini td { font-size: 13px; }
+    .tag-in  { color: #27ae60; }
+    .tag-out { color: #c0392b; }
 </style>
 {/block}
 
 {block name="content"}
-<!-- 页面头部 -->
-<div class="dashboard-header">
-    <div class="row">
-        <div class="col-sm-8">
-            <h2><i class="fa-dashboard"></i> 欢迎使用仓库管理系统</h2>
-            <p>高效、智能的仓储管理解决方案</p>
+<div class="page-title">
+    <div class="breadcrumb-env pull-left">
+        <ol class="breadcrumb bc-1">
+            <li><a href="{:url('Index/index')}"><i class="fa-home"></i>首页</a></li>
+            <li class="active"><strong>运营看板</strong></li>
+        </ol>
+    </div>
+</div>
+
+<!-- KPI -->
+<div class="row">
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card">
+            <i class="fa-cubes kpi-icon"></i>
+            <div class="kpi-label">库存总量</div>
+            <div class="kpi-value">{$board.total_num}<span class="kpi-unit">件</span></div>
+            <div class="kpi-label">共 {$board.product_count} 个在用产品</div>
         </div>
-        <div class="col-sm-4 text-right">
-            <div style="font-size: 36px; opacity: 0.3;">
-                <i class="fa-cubes"></i>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card green">
+            <i class="fa-money kpi-icon"></i>
+            <div class="kpi-label">库存金额（按单价估算）</div>
+            <div class="kpi-value">￥{:number_format($board.total_amount, 2, '.', ',')}</div>
+            <div class="kpi-label">库存 × 单价</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card orange">
+            <i class="fa-sign-in kpi-icon"></i>
+            <div class="kpi-label">今日入库 / 出库</div>
+            <div class="kpi-value">{$board.today_in} <span class="kpi-unit">入</span> / {$board.today_out} <span class="kpi-unit">出</span></div>
+            <div class="kpi-label">近 7 天：{$board.week_in} 入 / {$board.week_out} 出</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card red">
+            <i class="fa-exclamation-triangle kpi-icon"></i>
+            <div class="kpi-label">库存预警</div>
+            <div class="kpi-value">{$board.low_count}<span class="kpi-unit">个</span></div>
+            <div class="kpi-label">
+                {if condition="$board.low_count > 0"}
+                <a href="{:url('Stock/warning')}" style="color:#c0392b;">去处理</a>
+                {else}
+                库存充足
+                {/if}
             </div>
         </div>
     </div>
@@ -148,243 +86,147 @@
 
 <!-- 快捷操作 -->
 <div class="row">
-    <div class="col-sm-3">
-        <a href="{:url('Product/index')}" class="quick-link-item">
-            <i class="fa fa-cube text-primary"></i>
-            <span>产品管理</span>
+    <div class="col-md-3 col-sm-6">
+        <a class="btn btn-primary btn-block" style="margin-bottom:10px;" href="{:url('Instorage/create')}">
+            <i class="fa-sign-in"></i> 新增入库单
         </a>
     </div>
-    <div class="col-sm-3">
-        <a href="{:url('Instorage/index')}" class="quick-link-item">
-            <i class="fa fa-sign-in text-success"></i>
-            <span>入库管理</span>
+    <div class="col-md-3 col-sm-6">
+        <a class="btn btn-warning btn-block" style="margin-bottom:10px;" href="{:url('Outstorage/create')}">
+            <i class="fa-sign-out"></i> 新增出库单
         </a>
     </div>
-    <div class="col-sm-3">
-        <a href="{:url('Outstorage/index')}" class="quick-link-item">
-            <i class="fa fa-sign-out text-warning"></i>
-            <span>出库管理</span>
+    <div class="col-md-3 col-sm-6">
+        <a class="btn btn-success btn-block" style="margin-bottom:10px;" href="{:url('Product/create')}">
+            <i class="fa-plus"></i> 新增产品
         </a>
     </div>
-    <div class="col-sm-3">
-        <a href="{:url('Storage/index')}" class="quick-link-item">
-            <i class="fa fa-archive text-info"></i>
-            <span>仓库管理</span>
+    <div class="col-md-3 col-sm-6">
+        <a class="btn btn-default btn-block" style="margin-bottom:10px;" href="{:url('Stock/index')}">
+            <i class="fa-book"></i> 库存台账
         </a>
     </div>
 </div>
 
-<!-- 应用信息卡片 -->
+<div class="row">
+    <!-- 最近单据 -->
+    <div class="col-md-7">
+        <div class="panel-mini">
+            <div class="pm-head">
+                最近出入库单据
+                <a href="{:url('Instorage/index')}">入库单</a>
+                <a href="{:url('Outstorage/index')}" style="margin-right:12px;">出库单</a>
+            </div>
+            <div class="pm-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>单号</th>
+                            <th>制单者</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name='board.recent' id='vo' empty='<tr><td colspan=\"5\">还没有出入库记录</td></tr>'}
+                        <tr>
+                            <td>
+                                {if condition="$vo.state eq 1"}
+                                <span class="tag-in">入库</span>
+                                {else}
+                                <span class="tag-out">出库</span>
+                                {/if}
+                            </td>
+                            <td>{$vo.sn}</td>
+                            <td>{$vo.author}</td>
+                            <td>{:date('Y-m-d H:i', $vo->add_time)}</td>
+                            <td>
+                                <a target="_blank" href="{if condition="$vo.state eq 1"}{:url('Instorage/prints/id/'.$vo->id)}{else}{:url('Outstorage/prints/id/'.$vo->id)}{/if}">打印</a>
+                            </td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 库存预警 TOP -->
+    <div class="col-md-5">
+        <div class="panel-mini">
+            <div class="pm-head">
+                库存预警提示
+                <a href="{:url('Stock/warning')}">全部预警</a>
+            </div>
+            <div class="pm-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>产品</th>
+                            <th>库存</th>
+                            <th>下限</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name='board.low_list' id='vo' empty='<tr><td colspan=\"3\">没有低于预警下限的产品</td></tr>'}
+                        <tr>
+                            <td>{$vo.name}</td>
+                            <td><b style="color:#c0392b;">{$vo.num}</b></td>
+                            <td>{$vo.min_num}</td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 系统信息（折叠） -->
 <div class="row">
     <div class="col-md-12">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa-info-circle"></i> 应用信息</h3>
+        <div class="panel panel-default">
+            <div class="panel-heading" style="cursor:pointer;" data-toggle="collapse" data-target="#sysinfo">
+                <h3 class="panel-title"><i class="fa-info-circle"></i> 系统与运行环境（点击展开）</h3>
             </div>
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <div class="xe-widget xe-counter xe-counter-primary">
-                            <div class="xe-icon">
-                                <i class="fa-cloud"></i>
-                            </div>
-                            <div class="xe-details">
-                                <span class="xe-label">系统名称</span>
-                                <strong id="app_name">-</strong>
-                            </div>
+            <div id="sysinfo" class="collapse">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>应用</h4>
+                            <p>系统名称：<span id="app_name">-</span></p>
+                            <p>版本号：<span id="app_version">-</span></p>
+                            <p>ThinkPHP：<span id="thinkphp_version">-</span></p>
+                            <p>服务器时间：<span id="server_time">-</span></p>
+                            <h4>系统环境</h4>
+                            <p>操作系统：<span id="os">-</span></p>
+                            <p>Web 服务器：<span id="server_software">-</span></p>
+                            <p>时区：<span id="timezone">-</span></p>
+                            <p>系统时间：<span id="system_time">-</span></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>PHP</h4>
+                            <p>版本：<span id="php_version">-</span></p>
+                            <p>SAPI：<span id="php_sapi">-</span></p>
+                            <p>内存限制：<span id="memory_limit">-</span></p>
+                            <p>上传大小：<span id="upload_max_filesize">-</span></p>
+                            <p>POST 大小：<span id="post_max_size">-</span></p>
+                            <p>执行超时：<span id="max_execution_time">-</span></p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>数据库</h4>
+                            <p>状态：<span id="db_status">-</span></p>
+                            <p>版本：<span id="db_version">-</span></p>
+                            <p>数据库名：<span id="db_name">-</span></p>
+                            <p>主机：<span id="db_host">:</span><span id="db_port"></span></p>
+                            <p>字符集：<span id="db_charset">-</span></p>
+                            <p>表数量：<span id="db_table_count">-</span></p>
+                            <p>数据库大小：<span id="db_size">-</span></p>
                         </div>
                     </div>
-                    <div class="col-sm-3">
-                        <div class="xe-widget xe-counter xe-counter-success">
-                            <div class="xe-icon">
-                                <i class="fa-tag"></i>
-                            </div>
-                            <div class="xe-details">
-                                <span class="xe-label">版本号</span>
-                                <strong id="app_version">-</strong>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="xe-widget xe-counter xe-counter-warning">
-                            <div class="xe-icon">
-                                <i class="fa-code"></i>
-                            </div>
-                            <div class="xe-details">
-                                <span class="xe-label">ThinkPHP</span>
-                                <strong id="thinkphp_version">-</strong>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="xe-widget xe-counter xe-counter-info">
-                            <div class="xe-icon">
-                                <i class="fa-clock-o"></i>
-                            </div>
-                            <div class="xe-details">
-                                <span class="xe-label">服务器时间</span>
-                                <strong id="server_time">-</strong>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="extensions_list"></div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 系统信息 -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="info-panel">
-            <h4><i class="fa-desktop"></i> 系统环境</h4>
-            <div class="info-item">
-                <label>操作系统:</label>
-                <span id="os">-</span>
-            </div>
-            <div class="info-item">
-                <label>Web 服务器:</label>
-                <span id="server_software">-</span>
-            </div>
-            <div class="info-item">
-                <label>时区:</label>
-                <span id="timezone">-</span>
-            </div>
-            <div class="info-item">
-                <label>文档根目录:</label>
-                <span id="document_root">-</span>
-            </div>
-            <div class="info-item">
-                <label>脚本路径:</label>
-                <span id="script_name">-</span>
-            </div>
-            <div class="info-item">
-                <label>PHP 配置:</label>
-                <span id="php_ini">-</span>
-            </div>
-            <div class="info-item">
-                <label>系统时间:</label>
-                <span id="system_time">-</span>
-            </div>
-            <div class="info-item">
-                <label>系统语言:</label>
-                <span id="system_locale">-</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="info-panel">
-            <h4><i class="fa-php"></i> PHP 配置</h4>
-            <div class="info-item">
-                <label>PHP 版本:</label>
-                <span id="php_version"><span class="label label-primary">-</span></span>
-            </div>
-            <div class="info-item">
-                <label>SAPI:</label>
-                <span id="php_sapi">-</span>
-            </div>
-            <div class="info-item">
-                <label>内存限制:</label>
-                <span id="memory_limit">-</span>
-            </div>
-            <div class="info-item">
-                <label>上传大小:</label>
-                <span id="upload_max_filesize">-</span>
-            </div>
-            <div class="info-item">
-                <label>POST 大小:</label>
-                <span id="post_max_size">-</span>
-            </div>
-            <div class="info-item">
-                <label>执行超时:</label>
-                <span id="max_execution_time">-</span>
-            </div>
-            <div class="info-item">
-                <label>输入超时:</label>
-                <span id="max_input_time">-</span>
-            </div>
-            <div class="info-item">
-                <label>Zend 版本:</label>
-                <span id="zend_version">-</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 数据库信息和扩展 -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="info-panel">
-            <h4><i class="fa-database"></i> 数据库信息</h4>
-            <div class="info-item">
-                <label>状态:</label>
-                <span id="db_status">-</span>
-            </div>
-            <div class="info-item">
-                <label>版本:</label>
-                <span id="db_version">-</span>
-            </div>
-            <div class="info-item">
-                <label>数据库名:</label>
-                <span id="db_name">-</span>
-            </div>
-            <div class="info-item">
-                <label>主机:</label>
-                <span id="db_host">-</span>
-            </div>
-            <div class="info-item">
-                <label>端口:</label>
-                <span id="db_port">-</span>
-            </div>
-            <div class="info-item">
-                <label>字符集:</label>
-                <span id="db_charset">-</span>
-            </div>
-            <div class="info-item">
-                <label>排序规则:</label>
-                <span id="db_collation">-</span>
-            </div>
-            <div class="info-item">
-                <label>存储引擎:</label>
-                <span id="db_engine">-</span>
-            </div>
-            <div class="info-item">
-                <label>支持引擎:</label>
-                <span id="db_supported_engines">-</span>
-            </div>
-            <div class="info-item">
-                <label>最大连接:</label>
-                <span id="db_max_connections">-</span>
-            </div>
-            <div class="info-item">
-                <label>当前连接:</label>
-                <span id="db_current_connections">-</span>
-            </div>
-            <div class="info-item">
-                <label>数据库大小:</label>
-                <span id="db_size">-</span>
-            </div>
-            <div class="info-item">
-                <label>数据大小:</label>
-                <span id="db_data_size">-</span>
-            </div>
-            <div class="info-item">
-                <label>索引大小:</label>
-                <span id="db_index_size">-</span>
-            </div>
-            <div class="info-item">
-                <label>表数量:</label>
-                <span id="db_table_count">-</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="info-panel">
-            <h4><i class="fa-puzzle-piece"></i> PHP 扩展</h4>
-            <div id="extensions_list">
-                <!-- 扩展列表将通过 JS 动态加载 -->
             </div>
         </div>
     </div>
@@ -393,95 +235,73 @@
 
 {block name="script"}
 <script type="text/javascript">
-jQuery(document).ready(function($) {
-    // 加载系统信息
-    loadSystemInfo();
-    
+    var sysLoaded = false;
+
     function loadSystemInfo() {
+        if (sysLoaded) { return; }
+        sysLoaded = true;
         $.ajax({
             url: "{:url('Index/getSystemInfo')}",
             type: 'GET',
             dataType: 'json',
-            success: function(response) {
-                if (response.code === 0) {
-                    var data = response.data;
-                    
-                    // 应用信息
-                    $('#app_name').text(data.app.app_name);
-                    $('#app_version').text(data.app.version);
-                    $('#thinkphp_version').text(data.app.thinkphp_version);
-                    $('#server_time').text(data.system.server_time);
-                    
-                    // 系统信息
-                    $('#os').text(data.system.os);
-                    $('#server_software').text(data.system.server_software);
-                    $('#timezone').text(data.system.timezone);
-                    $('#document_root').text(data.system.document_root);
-                    $('#script_name').text(data.system.script_name);
-                    $('#php_ini').text(data.system.php_ini || 'Unknown');
-                    $('#system_time').text(data.system.system_time || '-');
-                    $('#system_locale').text(data.system.locale || '-');
-                    
-                    // PHP 信息
-                    $('#php_version').html('<span class="label label-primary">' + data.php.php_version + '</span>');
-                    $('#php_sapi').text(data.php.php_sapi);
-                    $('#memory_limit').text(data.php.memory_limit);
-                    $('#upload_max_filesize').text(data.php.upload_max_filesize);
-                    $('#post_max_size').text(data.php.post_max_size);
-                    $('#max_execution_time').text(data.php.max_execution_time);
-                    $('#max_input_time').text(data.php.max_input_time || '-');
-                    $('#zend_version').text(data.php.zend_version || '-');
-                    
-                    // 数据库信息
-                    if (data.database.status === '正常') {
-                        $('#db_status').html('<span class="label label-success">正常</span>');
-                    } else {
-                        $('#db_status').html('<span class="label label-danger">异常</span>');
-                    }
-                    $('#db_version').text(data.database.version || '-');
-                    $('#db_name').text(data.database.database || '-');
-                    $('#db_host').text(data.database.hostname || '-');
-                    $('#db_port').text(data.database.hostport || '-');
-                    $('#db_charset').text(data.database.charset || '-');
-                    $('#db_collation').text(data.database.collation || '-');
-                    $('#db_engine').text(data.database.engine || '-');
-                    $('#db_supported_engines').text(data.database.supported_engines || '-');
-                    $('#db_max_connections').text(data.database.max_connections || '-');
-                    $('#db_current_connections').text(data.database.current_connections || '-');
-                    $('#db_size').text(data.database.database_size || '-');
-                    $('#db_data_size').text(data.database.data_size || '-');
-                    $('#db_index_size').text(data.database.index_size || '-');
-                    $('#db_table_count').text(data.database.table_count || '-');
-                    
-                    // PHP 扩展
-                    renderExtensions(data.php.extensions);
-                } else {
+            success: function (response) {
+                if (response.code !== 0) {
                     toastr.error(response.msg || '获取系统信息失败');
+                    return;
                 }
+                var data = response.data;
+                $('#app_name').text(data.app.app_name);
+                $('#app_version').text(data.app.version);
+                $('#thinkphp_version').text(data.app.thinkphp_version);
+                $('#server_time').text(data.system.server_time);
+
+                $('#os').text(data.system.os);
+                $('#server_software').text(data.system.server_software);
+                $('#timezone').text(data.system.timezone);
+                $('#system_time').text(data.system.system_time || '-');
+
+                $('#php_version').text(data.php.php_version);
+                $('#php_sapi').text(data.php.php_sapi);
+                $('#memory_limit').text(data.php.memory_limit);
+                $('#upload_max_filesize').text(data.php.upload_max_filesize);
+                $('#post_max_size').text(data.php.post_max_size);
+                $('#max_execution_time').text(data.php.max_execution_time);
+
+                if (data.database.status === '正常') {
+                    $('#db_status').html('<span class="label label-success">正常</span>');
+                } else {
+                    $('#db_status').html('<span class="label label-danger">异常</span>');
+                    $('#db_status').text(data.database.status || '异常');
+                }
+                $('#db_version').text(data.database.version || '-');
+                $('#db_name').text(data.database.database || '-');
+                $('#db_host').text(data.database.hostname || '-');
+                $('#db_port').text(data.database.hostport || '-');
+                $('#db_charset').text(data.database.charset || '-');
+                $('#db_table_count').text(data.database.table_count || '-');
+                $('#db_size').text(data.database.database_size || '-');
+
+                renderExtensions(data.php.extensions);
             },
-            error: function() {
-                toastr.error('请求失败，请检查网络');
+            error: function () {
+                toastr.error('请求失败，请稍后重试');
             }
         });
     }
-    
+
     function renderExtensions(extensions) {
-        var html = '<div class="extension-grid">';
-        
+        var html = '<h4>PHP 扩展</h4><div style="display:flex;flex-wrap:wrap;gap:6px;">';
         for (var ext in extensions) {
-            var status = extensions[ext];
-            var className = status ? 'success' : 'danger';
-            var icon = status ? 'fa-check-circle' : 'fa-times-circle';
-            
-            html += '<div class="extension-item ' + className + '">';
-            html += '<i class="fa ' + icon + '"></i> ';
-            html += '<span>' + ext + '</span>';
-            html += '</div>';
+            var ok = extensions[ext];
+            html += '<span class="label ' + (ok ? 'label-success' : 'label-default') + '">' + ext + '</span>';
         }
-        
         html += '</div>';
         $('#extensions_list').html(html);
     }
-});
+
+    jQuery(document).ready(function ($) {
+        nav_show();
+        $('#sysinfo').on('show.bs.collapse', loadSystemInfo);
+    });
 </script>
 {/block}

@@ -69,6 +69,10 @@ class Response
      */
     public static function create($data = '', $type = '', $code = 200, array $header = [], $options = [])
     {
+        // 控制器直接返回数组时按 JSON 输出（本项目所有写接口都是 AJAX 返回数组）
+        if ('' === $type && is_array($data)) {
+            $type = 'json';
+        }
         $class = false !== strpos($type, '\\') ? $type : '\\think\\response\\' . ucfirst(strtolower($type));
         if (class_exists($class)) {
             $response = new $class($data, $code, $header, $options);

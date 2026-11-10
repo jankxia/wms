@@ -132,6 +132,22 @@
 	</div>
 
 	<div class="row">
+		<div class="col-md-6">
+			<div class="form-group">
+				<label class="control-label">库存预警下限</label>
+				<input type="number" min="0" step="1" class="form-control" name="min_num"
+					placeholder="低于该数量时提醒补货，0 表示不预警" value="{$info.min_num|default=0}">
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="form-group">
+				<label class="control-label">当前库存</label>
+				<input type="text" class="form-control" value="{$info.num}" disabled>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
 		<div class="col-md-12">
 			<div class="form-group">
                 <label class="control-label">产品状态</label>

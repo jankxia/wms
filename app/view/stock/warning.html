@@ -1,0 +1,84 @@
+{extend name="base"}
+{block name="title"}库存预警 - 仓库管理系统{/block}
+{block name="style"}
+<style>
+    .low-tag { background: #c62828; color: #fff; padding: 1px 8px; border-radius: 3px; font-size: 12px; }
+    .ok-tag { background: #2e7d32; color: #fff; padding: 1px 8px; border-radius: 3px; font-size: 12px; }
+</style>
+{/block}
+{block name="content"}
+<div class="page-title">
+    <div class="breadcrumb-env pull-left">
+        <ol class="breadcrumb bc-1">
+            <li><a href="{:url('Index/index')}"><i class="fa-home"></i>首页</a></li>
+            <li><a href="">仓库作业</a></li>
+            <li class="active"><strong>库存预警</strong></li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading btn-toolbar">
+                <h3 class="panel-title">库存低于预警下限的产品</h3>
+                <div class="btn-group pull-right">
+                    <a class="btn btn-primary" href="{:url('Instorage/create')}"><span class="fa-sign-in"></span> 去入库</a>
+                    <a class="btn btn-default" href="{:url('Product/index')}">产品管理</a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="alert alert-info">
+                    预警规则：产品设置了「预警下限」且当前库存低于该值时，会出现在这里。在产品编辑页填写预警下限即可启用。
+                </div>
+
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>产品名称</th>
+                            <th>产品编号</th>
+                            <th>规格</th>
+                            <th>仓库 / 库位</th>
+                            <th>当前库存</th>
+                            <th>预警下限</th>
+                            <th>缺口</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name='list' id='vo' empty='<tr><td colspan=\"10\">当前没有需要补货的产品</td></tr>'}
+                        <tr>
+                            <td>#{$vo.id}</td>
+                            <td>{$vo.name}</td>
+                            <td>{$vo.sn}</td>
+                            <td>{$vo.spec}</td>
+                            <td>{$vo.storage_text} / {$vo.location_text}</td>
+                            <td><b>{$vo.num}</b></td>
+                            <td>{$vo.min_num}</td>
+                            <td>{$vo.min_num - $vo.num}</td>
+                            <td><span class="low-tag">需要补货</span></td>
+                            <td>
+                                <a class="btn btn-primary btn-sm" href="{:url('Instorage/create')}">入库</a>
+                                <a class="btn btn-default btn-sm" target="_blank" href="{:url('Stock/index')}?product={$vo.name}">流水</a>
+                            </td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+
+                <div class="row">
+                    <div class="col-xs-6">共{$list->total()} 个产品需要补货</div>
+                    <div class="col-xs-6 text-right">{$list->render()}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+{block name="script"}
+<script type="text/javascript">
+    $(function () { nav_show(); });
+</script>
+{/block}

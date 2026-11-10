@@ -1,163 +1,203 @@
 <?php
 namespace app\service;
-use app\model\Unit,
-	app\model\Product,
-	app\model\Productup,
-	app\model\Storage,
-	app\model\Category,
-	app\model\Customer,
-	app\model\Supplier,
-	app\model\Location,
-	app\validate\ProductValidate;
 
-class ProductService{
+use app\model\Category;
+use app\model\Customer;
+use app\model\Location;
+use app\model\OrderList;
+use app\model\Product;
+use app\model\Productup;
+use app\model\Storage;
+use app\model\Supplier;
+use app\model\Unit;
+use think\Db;
 
-    public function page(){
-    	$data 	= request()->get();
-    	$where 	= [];
+class ProductService
+{
+    public function page()
+    {
+        $data  = request()->get();
+        $where = [];
 
-    	//封装where查询条件
-    	(empty($data['status']) || $data['status'] == '')	|| $where['status'] = $data['status'];
-    	empty($data['name'])	|| $where['name']			= 	['like','%'.$data['name'] ];
-    	empty($data['sn'])		|| $where['sn'] 			= 	$data['sn'];
+        (empty($data['status']) || $data['status'] === '') || $where['status'] = (int) $data['status'];
+        empty($data['name']) || $where['name'] = ['like', '%' . $data['name'] . '%'];
+        empty($data['sn'])   || $where['sn']   = ['like', '%' . $data['sn'] . '%'];
+        empty($data['category']) || $where['category'] = $data['category'];
+        empty($data['storage'])  || $where['storage']  = $data['storage'];
 
-        return Product::where($where)->paginate(10);     
+        if (!empty($data['low'])) {
+            $where['min_num'] = ['>', 0];
+        }
+
+        return Product::where($where)->order('id desc')->paginate(15);
     }
 
-
-    public function _init(){
-
-    	return [
-    		'unit'		=>	Unit::all(     [ 'status' => 0 ] ),
-    		'category'	=>	Category::all( [ 'status' => 0 ] ),
-    		'customer'	=>	Customer::all( [ 'status' => 0 ] ),
-    		'supplier'	=>	Supplier::all( [ 'status' => 0 ] ),
-    		'storage'	=>	Storage::all(  [ 'status' => 0 ] ),
-    		'location'	=>	Location::all( [ 'status' => 0 ] ),
-    	];
+    public function _init()
+    {
+        return [
+            'unit'     => Unit::all(['status' => 0]),
+            'category' => Category::all(['status' => 0]),
+            'customer' => Customer::all(['status' => 0]),
+            'supplier' => Supplier::all(['status' => 0]),
+            'storage'  => Storage::all(['status' => 0]),
+            'location' => Location::all(['status' => 0]),
+        ];
     }
 
+    public function save()
+    {
+        if (!request()->isPost()) {
+            return ['error' => 100, 'msg' => '非法请求'];
+        }
+        $param = request()->param();
+        $error = $this->_validate($param);
+        if (!is_null($error)) {
+            return ['error' => 100, 'msg' => $error];
+        }
 
-    // 保存数据
-    public function save(){
-    	request()->isPost() || die('request not  post!');
-    	
-		$param = request()->param();	//获取参数
-		$error = $this->_validate($param); 		// 是否通过验证
+        if (Product::get(['name' => $param['name']])) {
+            return ['error' => 100, 'msg' => '产品名称已经存在'];
+        }
 
-		if( is_null( $error ) ){
+        Db::startTrans();
+        try {
+            $product            = new Product();
+            $product->sn        = $this->_fill($param, 'sn');
+            $product->nbsn      = $this->_fill($param, 'nbsn');
+            $product->cjsn      = $this->_fill($param, 'cjsn');
+            $product->name      = $this->_fill($param, 'name');
+            $product->category  = $this->_fill($param, 'category');
+            $product->storage   = $this->_fill($param, 'storage');
+            $product->location  = $this->_fill($param, 'location');
+            $product->unit      = $this->_fill($param, 'unit');
+            $product->supplier  = $this->_fill($param, 'supplier');
+            $product->customer  = $this->_fill($param, 'customer');
+            $product->spec      = $this->_fill($param, 'spec');
+            $product->price     = $this->_price($param);
+            $product->desc      = $this->_fill($param, 'desc');
+            $product->num       = 0;
+            $product->min_num   = $this->_int($param, 'min_num');
+            $product->add_time  = time();
+            $product->save();
 
-			if( Product::get(['name' => $param['name'] ]) ){
-				return ['error'	=>	100,'msg'	=>	'名称已经存在'];
-				exit();	
-			}
+            $productup            = new Productup();
+            $productup->gid       = $product->id;
+            $productup->storage   = $product->storage;
+            $productup->location  = $product->location;
+            $productup->desc      = $product->desc;
+            $productup->add_time  = time();
+            $productup->save();
 
-			$product 			= new Product();
-			$product->sn 		= $param['sn'];
-			$product->nbsn 		= $param['nbsn'];
-			$product->cjsn 		= $param['cjsn'];
-			$product->name 		= $param['name'];
-			$product->category 	= $param['category'];
-			$product->storage 	= $param['storage'];
-			$product->location 	= $param['location'];
-			$product->unit 		= $param['unit'];
-			$product->supplier 	= $param['supplier'];
-			$product->customer 	= $param['customer'];
-			$product->spec 		= $param['spec'];
-			$product->price 	= $param['price'];
-			$product->desc 		= $param['desc'];
-			// $product->status 	= $param['status'];
-			$product->add_time 	= time();
-
-			// 检测错�?
-			if( $gid = $product->save() ){
-
-				$productup 				= new Productup();
-				$productup->gid 		= $product->id;
-				$productup->storage 	= $param['storage'];
-				$productup->location 	= $param['location'];
-				$productup->desc 		= $param['desc'];
-				$productup->add_time 	= time();
-				$productup->save();
-
-				return ['error'	=>	0,'msg'	=>	'保存成功'];
-			}else{
-				return ['error'	=>	100,'msg'	=>	'保存失败'];	
-			}
-			
-		}else{
-			return ['error'	=>	100,'msg'	=>	$error];
-		}
-
+            Db::commit();
+            return ['error' => 0, 'msg' => '保存成功'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['error' => 100, 'msg' => '保存失败：' . $e->getMessage()];
+        }
     }
 
-
-    public function edit($id){
-    	return Product::get($id);
+    public function edit($id)
+    {
+        return Product::get($id);
     }
 
+    public function update()
+    {
+        if (!request()->isPost()) {
+            return ['error' => 100, 'msg' => '非法请求'];
+        }
+        $param = request()->param();
+        $error = $this->_validate($param);
+        if (!is_null($error)) {
+            return ['error' => 100, 'msg' => $error];
+        }
 
-    public function update(){
-    	request()->isPost() || die('request not  post!');
-    	
-		$param = request()->param();	//获取参数
-		$error = $this->_validate($param); 		// 是否通过验证
+        $product = Product::get($param['id']);
+        if (!$product) {
+            return ['error' => 100, 'msg' => '产品不存在'];
+        }
 
-		if( is_null( $error ) ){
+        $product->sn       = $this->_fill($param, 'sn');
+        $product->nbsn     = $this->_fill($param, 'nbsn');
+        $product->cjsn     = $this->_fill($param, 'cjsn');
+        $product->name     = $this->_fill($param, 'name');
+        $product->category = $this->_fill($param, 'category');
+        $product->storage  = $this->_fill($param, 'storage');
+        $product->location = $this->_fill($param, 'location');
+        $product->unit     = $this->_fill($param, 'unit');
+        $product->supplier = $this->_fill($param, 'supplier');
+        $product->customer = $this->_fill($param, 'customer');
+        $product->spec     = $this->_fill($param, 'spec');
+        $product->price    = $this->_price($param);
+        $product->desc     = $this->_fill($param, 'desc');
+        $product->min_num  = $this->_int($param, 'min_num');
+        if (isset($param['status'])) {
+            $product->status = (int) $param['status'];
+        }
 
-			$product = Product::get($param['id']);
-			$product->sn 		= $param['sn'];
-			$product->nbsn 		= $param['nbsn'];
-			$product->cjsn 		= $param['cjsn'];
-			$product->name 		= $param['name'];
-			$product->category 	= $param['category'];
-			$product->storage 	= $param['storage'];
-			$product->location 	= $param['location'];
-			$product->unit 		= $param['unit'];
-			$product->supplier 	= $param['supplier'];
-			$product->customer 	= $param['customer'];
-			$product->spec 		= $param['spec'];
-			$product->price 	= $param['price'];
-			$product->desc 		= $param['desc'];
-			$product->status 	= $param['status'];
-
-			// 检测错�?
-			if( $product->save() ){
-				return ['error'	=>	0,'msg'	=>	'修改成功'];
-			}else{
-				return ['error'	=>	100,'msg'	=>	'修改失败'];	
-			}
-		}else{
-			return ['error'	=>	100,'msg'	=>	$error];
-		}
-
-
+        if ($product->save()) {
+            return ['error' => 0, 'msg' => '修改成功'];
+        }
+        return ['error' => 100, 'msg' => '修改失败'];
     }
 
-    public function delete($id){
-    	if( Product::destroy($id) ){
-    		Productup::destroy([
-    			'gid' => $id
-    		]);
-    		return ['error'	=>	0,'msg'	=>	'删除成功'];
-    	}else{
-    		return ['error'	=>	100,'msg'	=>	'删除失败'];	
-    	}
+    /**
+     * 删除产品：有库存或已有出入库记录时拒绝删除，避免历史单据取不到产品
+     */
+    public function delete($id)
+    {
+        $product = Product::get($id);
+        if (!$product) {
+            return ['error' => 100, 'msg' => '产品不存在'];
+        }
+        if ((int) $product->num > 0) {
+            return ['error' => 100, 'msg' => '该产品还有 ' . $product->num . ' 库存，请先出库清零，或将状态改为“废弃”'];
+        }
+        if (OrderList::where('good_id', $id)->count() > 0) {
+            return ['error' => 100, 'msg' => '该产品已有出入库单据记录，不能删除；如需停用请把状态改为“废弃”'];
+        }
 
-		// 支持批量删除多个数据
-		// User::destroy('1,2,3');
-		// // 或�?
-		// User::destroy([1,2,3]);
+        Db::startTrans();
+        try {
+            Productup::where('gid', $id)->delete();
+            Db::name('product')->where('id', $id)->delete();
+            Db::commit();
+            return ['error' => 0, 'msg' => '删除成功'];
+        } catch (\Exception $e) {
+            Db::rollback();
+            return ['error' => 100, 'msg' => '删除失败：' . $e->getMessage()];
+        }
     }
 
-
-    // 验证�?
-    private function _validate($data){
-		// 验证
-		$validate = validate('ProductValidate');
-		if(!$validate->check($data)){
-			return $validate->getError();
-		}
+    private function _fill($param, $key)
+    {
+        return isset($param[$key]) ? trim((string) $param[$key]) : '';
     }
 
+    private function _price($param)
+    {
+        $price = isset($param['price']) ? trim((string) $param['price']) : '';
+        if ($price === '' || !is_numeric($price) || $price < 0) {
+            return 0;
+        }
+        return round((float) $price, 2);
+    }
+
+    private function _int($param, $key)
+    {
+        $value = isset($param[$key]) ? trim((string) $param[$key]) : '';
+        if ($value === '' || !is_numeric($value) || $value < 0) {
+            return 0;
+        }
+        return (int) $value;
+    }
+
+    private function _validate($data)
+    {
+        $validate = validate('ProductValidate');
+        if (!$validate->check($data)) {
+            return $validate->getError();
+        }
+        return null;
+    }
 }

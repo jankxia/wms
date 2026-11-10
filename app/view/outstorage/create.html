@@ -24,8 +24,10 @@
             <div class="form-group">
                 <label class="control-label">出库类型</label>
                 <select class="form-control" name="type">
-                    <option value="采购出库" >采购出库</option>
-                    <option value="销售退货" >销售退货</option>
+                    <option value="销售出库" >销售出库</option>
+                    <option value="采购退货" >采购退货</option>
+                    <option value="调拨出库" >调拨出库</option>
+                    <option value="报损出库" >报损出库</option>
                 </select>  
             </div>
         </div>
@@ -84,7 +86,7 @@
                 <td> 
                     <select name="product[]" class="form-control">
                         {volist name='product' id='vo'}
-                        <option value="{$vo.id}">{$vo.name}</option>
+                        <option value="{$vo.id}">{$vo.name}{$vo.sn}（库存 {$vo.num}）</option>
                         {/volist}
                     </select> 
                 </td>
@@ -120,8 +122,10 @@
 <script>
 
 function add_list(obj){
-    // $(obj).parent().parent().hide();
-    $(obj).parent().parent().clone().appendTo( $(obj).parent().parent().parent() );
+    var $row   = $(obj).closest('tr');
+    var $clone = $row.clone();
+    $clone.find('input[name="num[]"]').val('');
+    $clone.appendTo($row.parent());
 }
 
 function del_list(obj){

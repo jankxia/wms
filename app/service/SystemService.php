@@ -77,7 +77,7 @@ class SystemService
             $versionComment = $versionResult[0]['comment'] ?? $versionResult[0][1] ?? '';
             
             // 获取字符集信息
-            $charsetResult = $db->query("SHOW VARIABLES LIKE 'character_set_%'");
+            $charsetResult = $db->query("SHOW VARIABLES LIKE '%database'");
             $charsets = [];
             foreach ($charsetResult as $row) {
                 $key = $row[0] ?? $row['Variable_name'] ?? '';
@@ -86,7 +86,7 @@ class SystemService
             }
             
             // 获取存储引擎
-            $engineResult = $db->query("SHOW VARIABLES LIKE 'storage_engine'");
+            $engineResult = $db->query("SHOW VARIABLES LIKE 'default_storage_engine'");
             $engine = $engineResult[0][1] ?? $engineResult[0]['Value'] ?? '-';
             
             // 获取支持的引擎

@@ -160,6 +160,8 @@
                             <th>类别</th>
                             <th>单位</th>
                             <th>价格</th>
+                            <th>库存</th>
+                            <th>预警下限</th>
                             <th>仓库</th>
                             <th>库位</th>
                             <th>供应商</th>
@@ -179,14 +181,22 @@
                             <!-- <td> {$user.id} </td> -->
                             <td> {$user.sn} </td>
                             <td> {$user.name} </td>
-                            <td> {$user.category} </td>
-                            <td> {$user.unit} </td>
+                            <td> {$user.category_text} </td>
+                            <td> {$user.unit_text} </td>
                             <td> {$user.price} </td>
-                            <td> {$user.storage} </td>
-                            <td> {$user.location} </td>
+                            <td>
+                                {if condition="$user.is_low eq 1"}
+                                <b style="color:#c0392b;">{$user.num}</b> <span class="label label-danger">低</span>
+                                {else}
+                                {$user.num}
+                                {/if}
+                            </td>
+                            <td> {$user.min_num} </td>
+                            <td> {$user.storage_text} </td>
+                            <td> {$user.location_text} </td>
                             <td> {$user.supplier} </td>
                             <td> {$user.customer} </td>
-                            <td> {$user.status==0?'正常':'废弃'} </td>
+                            <td> {$user.status_text} </td>
                             <td>
                                 <a href="javascript:;" class="btn btn-secondary btn-sm btn-icon icon-left"
                                     onclick="editAjaxModal('{:url('/Product/edit/id/'.$user->id)}')">

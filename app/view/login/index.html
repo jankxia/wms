@@ -9,6 +9,7 @@
     <meta name="author" content="" />
     
     <title>登录</title>
+    <meta name="csrf-token" content="{$csrf_token|default=''}">
 
     <!-- <link rel="stylesheet" href="http://fonts.useso.com/css?family=Arimo:400,700,400italic"> -->
     <link rel="stylesheet" href="__STATIC__/css/fonts/linecons/css/linecons.css">
@@ -49,6 +50,7 @@
                 
                 <!-- Add class "fade-in-effect" for login form effect -->
                 <form method="post" role="form" id="login" class="login-form fade-in-effect">
+                    <input type="hidden" name="_token" id="_token" value="{$csrf_token|default=''}" />
                     
                     <div class="login-header">
                         <a href="dashboard-1.html" class="logo">
@@ -187,6 +189,7 @@
                                     dataType: 'json',
                                     data: {
                                         do_login: true,
+                                        _token: $(form).find('#_token').val(),
                                         username: $(form).find('#username').val(),
                                         password: $(form).find('#passwd').val(),
                                     },

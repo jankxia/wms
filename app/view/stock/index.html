@@ -1,0 +1,110 @@
+{extend name="base"}
+{block name="title"}库存台账 - 仓库管理系统{/block}
+{block name="style"}
+<style>
+    .ledger-in  { color: #2e7d32; font-weight: 600; }
+    .ledger-out { color: #c62828; font-weight: 600; }
+    .search-bar .form-control { display: inline-block; width: auto; }
+    .search-bar span { margin-right: 12px; }
+</style>
+{/block}
+{block name="content"}
+<div class="page-title">
+    <div class="breadcrumb-env pull-left">
+        <ol class="breadcrumb bc-1">
+            <li><a href="{:url('Index/index')}"><i class="fa-home"></i>首页</a></li>
+            <li><a href="">仓库作业</a></li>
+            <li class="active"><strong>库存台账</strong></li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">库存流水（每一条出入库、冲销记录都会留痕）</h3>
+            </div>
+            <div class="panel-body">
+                <form class="form-inline search-bar" method="get" style="margin-bottom:15px;">
+                    <span>
+                        <label class="control-label">产品</label>
+                        <input type="text" class="form-control" name="product" placeholder="产品名称"
+                            value="{$Request.get.product}">
+                    </span>
+                    <span>
+                        <label class="control-label">单号</label>
+                        <input type="text" class="form-control" name="sn" placeholder="单号"
+                            value="{$Request.get.sn}">
+                    </span>
+                    <span>
+                        <label class="control-label">类型</label>
+                        <select class="form-control" name="type">
+                            <option value="">全部</option>
+                            {volist name='types' id='t'}
+                            <option value="{$key}">{$t}</option>
+                            {/volist}
+                        </select>
+                    </span>
+                    <span>
+                        <label class="control-label">开始</label>
+                        <input type="date" class="form-control" name="start" value="{$Request.get.start}">
+                    </span>
+                    <span>
+                        <label class="control-label">结束</label>
+                        <input type="date" class="form-control" name="end" value="{$Request.get.end}">
+                    </span>
+                    <button class="btn btn-primary" type="submit"><span class="fa-search"></span> 搜 索</button>
+                    <a class="btn btn-default" href="{:url('Stock/index')}">重 置</a>
+                </form>
+
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>类型</th>
+                            <th>产品名称</th>
+                            <th>产品编号</th>
+                            <th>单号</th>
+                            <th>变动</th>
+                            <th>变动前</th>
+                            <th>变动后</th>
+                            <th>操作人</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {volist name='list' id='vo' empty='<tr><td colspan=\"10\">暂无流水记录</td></tr>'}
+                        <tr>
+                            <td>{$vo.add_time_text}</td>
+                            <td>{$vo.type_text}</td>
+                            <td>{$vo.product_name}</td>
+                            <td>{$vo.product_sn}</td>
+                            <td>{$vo.order_sn}</td>
+                            <td class="{if condition="$vo.type eq 1 or $vo.type eq 4"}ledger-in{else /}ledger-out{/if}">{$vo.change}</td>
+                            <td>{$vo.before_num}</td>
+                            <td>{$vo.after_num}</td>
+                            <td>{$vo.operator}</td>
+                            <td>{$vo.remark}</td>
+                        </tr>
+                        {/volist}
+                    </tbody>
+                </table>
+
+                <div class="row">
+                    <div class="col-xs-6">共{$list->total()} 行数据</div>
+                    <div class="col-xs-6 text-right">{$list->render()}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+{block name="script"}
+<script type="text/javascript">
+    $(function () {
+        nav_show();
+        $('select[name="type"]').val("{:input('get.type')}");
+    });
+</script>
+{/block}

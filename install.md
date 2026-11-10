@@ -1,131 +1,96 @@
 # WMS 系统安装指南
 
-## 环境要求
+## 推荐：Docker 一键部署（飞牛 NAS 等）
+
+仓库自带 `Dockerfile` + `docker-compose.yml`，容器内是 PHP 8.2 + Apache，配套 MariaDB 10.11，首次启动自动建库、导入基线表并执行升级脚本。
+
+```bash
+docker compose up -d --build
+# 浏览器打开 http://服务器地址:80812
+```
+
+飞牛 NAS 的图形界面步骤、备份恢复、升级与常见问题见 **[docs/部署到飞牛NAS.md](docs/部署到飞牛NAS.md)**。
+
+## 手动部署（不用 Docker）
+
+### 环境要求
 
 | 项目 | 要求 |
 |------|------|
-| PHP 版本 | >= 8.0.0 |
-| MySQL 版本 | >= 5.7 (推荐 8.0) |
-| Web 服务器 | Apache / Nginx |
-| 扩展要求 | mysqli, pdo, json, mbstring |
+| PHP 版本 | >= 8.0（推荐 8.2 / 8.3） |
+| 扩展 | pdo_mysql、mysqli、mbstring、gd、zip、json、openssl |
+| 数据库 | MySQL 5.7+ / MariaDB 10.3+ |
+| Web 服务器 | Apache（需 `mod_rewrite` 与 `AcceptPathInfo On`）/ Nginx |
 
-## 安装步骤
+### 步骤
 
-### 方式一：在线安装向导
-
-1. 访问安装界面
-   
-   在浏览器中访问：`http://your-domain/install.php`
-
-2. 填写数据库信息
-   
-   | 字段 | 说明 | 默认值 |
-   |------|------|--------|
-   | 数据库主机 | MySQL 服务器地址 | localhost |
-   | 数据库用户名 | MySQL 用户名 | root |
-   | 数据库密码 | MySQL 密码 | - |
-   | 数据库名称 | 数据库名称 | wms_db |
-
-3. 点击「立即安装」按钮
-
-安装程序会自动完成以下操作：
-- 连接数据库服务器
-- 创建数据库（如不存在）
-- 导入 SQL 数据表结构
-- 写入数据库配置文件
-- 创建安装锁定文件
-
-### 方式二：手动安装
-
-1. **创建数据库**
+1. 建库（字符集必须是 utf8mb4）：
 
    ```sql
-   CREATE DATABASE wms_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+   CREATE DATABASE wms DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
    ```
 
-2. **导入数据**
+2. 导入基线结构与演示数据：
 
-   执行 `wms.sql` 文件，创建数据表和初始数据
-
-3. **配置数据库连接**
-
-   编辑 `app/database.php`：
-
-   ```php
-   <?php
-   return [
-       'type' => 'mysql',
-       'hostname' => 'localhost',
-       'database' => 'wms_db',
-       'username' => 'root',
-       'password' => 'your_password',
-       'hostport' => '3306',
-       'charset' => 'utf8mb4',
-       'prefix' => 'w_',
-       'debug' => true,
-   ];
-   ```
-
-### 安全设置
-
-安装完成后，请执行以下操作：
-
-1. **删除安装文件**
-   
    ```bash
-   rm public/install.php
+   mysql -u root -p wms < wms.sql
    ```
 
-2. **修改默认密码**
-   
-   首次登录后请立即修改管理员密码
+3. 执行升级脚本（幂等，可反复执行；只补 `min_num`、`w_stock_log`、密码字段长度和新菜单）：
 
-### 目录权限
+   ```bash
+   DB_HOST=127.0.0.1 DB_PORT=3306 DB_NAME=wms DB_USER=root DB_PASS=你的密码 php bin/migrate.php
+   ```
 
-确保以下目录可写：
+4. 配置数据库：`app/database.php` 读取环境变量，默认值可直接改文件里的 `getenv(...) ?: '默认值'`，也可以通过 Web 服务器（Apache `SetEnv`、Nginx `fastcgi_param`、php-fpm `env[...]`）注入：
 
-| 目录 | 说明 |
-|------|------|
-| app/ | 应用配置目录 |
-| runtime/ | 运行时缓存目录 |
-| public/uploads/ | 上传文件目录 |
+   | 环境变量 | 默认 |
+   |---|---|
+   | DB_HOST | localhost |
+   | DB_PORT | 3306 |
+   | DB_NAME | wms |
+   | DB_USER | wms |
+   | DB_PASS | wms123456 |
 
-## 默认登录账号
+5. 站点根目录指向 `public/`，并把 `public/.htaccess` 生效（Apache 需 `AllowOverride All`）。
 
-| 类型 | 用户名 | 密码 |
-|------|--------|------|
-| 管理员 | admin | admin123 |
+6. 目录权限：`runtime/`、`public/uploads/` 需要可写。
+
+7. 打开 `http://你的域名/login/index`。
+
+### 可选：重置管理员密码
+
+```bash
+DB_HOST=... DB_NAME=wms DB_USER=... DB_PASS=... \
+WMS_ADMIN_USER=bool WMS_ADMIN_PASSWORD=新密码 php bin/migrate.php
+```
+
+## 默认登录账号（来自演示数据）
+
+| 用户名 | 密码 | 说明 |
+|---|---|---|
+| bool | admin | 超级管理员（id=1，可见全部菜单） |
+| admin | admin | 仓库管理角色（只能操作仓库作业相关菜单） |
+
+**首次登录后请立刻在「编辑资料」里修改密码。** 密码以 `password_hash` 存储；旧的 md5 密码会在首次登录成功时自动升级为 `password_hash`。
+
+## 关于 public/install.php
+
+`public/install.php` 是原作者的网页安装向导，会直接改写配置文件，且无鉴权，属于风险入口。仓库内已有 `public/install.lock` 使其无法执行；本版本又加了环境变量开关：
+
+```bash
+# 确实需要网页安装向导时（装完立即关闭）
+WMS_ALLOW_INSTALL=1
+```
+
+日常部署请直接用上面的 Docker 方式或手动步骤，不要开启它。
 
 ## 常见问题
 
-### 连接数据库失败
-
-- 检查 MySQL 服务是否启动
-- 确认用户名和密码正确
-- 检查防火墙是否允许 3306 端口
-
-### 页面空白
-
-- 检查 PHP 版本是否 >= 8.0
-- 查看 `runtime/log` 目录下的错误日志
-- 确保 runtime 目录可写
-
-### SQL 导入失败
-
-- 手动执行 `wms.sql` 导入
-- 检查数据库字符集是否为 `utf8mb4`
-
-### 提示已安装
-
-- 删除 `app/install.lock` 文件后可重新安装
-
-## 访问系统
-
-安装完成后，访问：`http://your-domain/index.php`
-
-或：`http://your-domain/login/index` 直接进入登录页面
-
-## 技术支持
-
-- QQ 群：785794314
-- 在线演示：http://148.70.120.105:8002/login/index
+| 现象 | 处理 |
+|---|---|
+| `could not find driver` | 没装/没加载 `pdo_mysql`，检查 `php -m` 与 php.ini |
+| 「页面错误！请稍后再试～」 | 看 `runtime/log/年月/日.log`，里面记了真实异常 |
+| 登录后提示「没有操作权限」 | 该账号角色的菜单权限不含目标菜单，用超级管理员在「角色管理」里勾选 |
+| 页面样式错乱 | 站点根目录没指向 `public/`，或 `static/` 未被正确访问 |
+| 时间差 8 小时 | `php.ini` 设 `date.timezone = Asia/Shanghai` |

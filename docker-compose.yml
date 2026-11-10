@@ -1,0 +1,56 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: wms-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: wms_root_pwd
+      MARIADB_DATABASE: wms
+      MARIADB_USER: wms
+      MARIADB_PASSWORD: wms123456
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+    volumes:
+      - wms_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wms:latest
+    container_name: wms-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: wms
+      DB_USER: wms
+      DB_PASS: wms123456
+      APP_DEBUG: "false"
+      # 首次启动时可选：把管理员密码重置成指定值（留空则不动）
+      WMS_ADMIN_USER: bool
+      WMS_ADMIN_PASSWORD: ""
+      TZ: Asia/Shanghai
+    ports:
+      # 飞牛 NAS 上访问 http://NAS地址:80812 ；端口被占用改左边数字即可
+      - "80812:80"
+    volumes:
+      - wms_runtime:/var/www/html/runtime
+      - wms_uploads:/var/www/html/public/uploads
+
+volumes:
+  wms_db_data:
+  wms_runtime:
+  wms_uploads:
