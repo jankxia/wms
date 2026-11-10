@@ -6,7 +6,7 @@
 
 ```bash
 docker compose up -d --build
-# 浏览器打开 http://服务器地址:80812
+# 浏览器打开 http://服务器地址:8082
 ```
 
 飞牛 NAS 的图形界面步骤、备份恢复、升级与常见问题见 **[docs/部署到飞牛NAS.md](docs/部署到飞牛NAS.md)**。

@@ -8,7 +8,7 @@
 
 - 飞牛 NAS 已开启 Docker（应用中心安装「容器管理」/ Docker 服务）。
 - 记住自己的数据卷路径，例如 `/vol1/1000/docker`。
-- 默认端口 `80812`，如与现有服务冲突，改 compose 里的 `"80812:80"` 左边数字即可。
+- 默认端口 `8082`，如与现有服务冲突，改 compose 里的 `"8082:80"` 左边数字即可。**端口只能是 1–65535 之间的整数；写 `80812` 这类超过 65535 的数字，compose 会直接报 `invalid hostPort`。**
 
 ## 二、方式 A：NAS 本地构建（推荐，不依赖外网镜像仓库）
 
@@ -28,7 +28,7 @@ docker compose up -d --build
 docker compose logs -f app      # 看到「基线数据导入完成」「[migrate] 完成」即正常
 ```
 
-4. 浏览器打开 `http://NAS地址:80812`。
+4. 浏览器打开 `http://NAS地址:8082`。
 
 > NAS 是 ARM 架构（少数型号）也没问题，Dockerfile 基于官方 `php:8.2-apache`，多架构通用；只是本地构建时间会长一些。
 
@@ -80,7 +80,7 @@ services:
       APP_DEBUG: "false"
       TZ: Asia/Shanghai
     ports:
-      - "80812:80"
+      - "8082:80"
     volumes:
       - wms_runtime:/var/www/html/runtime
       - wms_uploads:/var/www/html/public/uploads
@@ -152,7 +152,7 @@ docker compose up -d --build
 |---|---|
 | 打开是 500 /「页面错误！请稍后再试～」 | 先看 `docker compose logs app`；多数是数据库没连上（`DB_HOST` 应填 `db`，不是 `127.0.0.1`） |
 | 日志里 `could not find driver` | 镜像里缺 `pdo_mysql`。本仓库 Dockerfile 已装，若自己改过基础镜像需补 `docker-php-ext-install pdo_mysql` |
-| 端口被占用 | 改 `docker-compose.yml` 里 `"80812:80"` 的左边 |
+| 端口被占用 | 改 `docker-compose.yml` 里 `"8082:80"` 的左边 |
 | 上传 Excel 报错 | 调大 `docker/php.ini` 的 `upload_max_filesize` / `post_max_size` 后重建 |
 | 时间显示差 8 小时 | compose 已设 `TZ=Asia/Shanghai` 与 `--default-time-zone=+08:00`，改过数据库镜像要同步改 |
 | 拉取镜像很慢 | 在「容器管理 → 设置」里配镜像加速，或直接用方式 A 本地构建 |
@@ -160,6 +160,6 @@ docker compose up -d --build
 
 ## 八、安全建议
 
-- 不要把 `80812` 直接暴露到公网；需要外网访问时走 NAS 自带的反向代理并启用 HTTPS。
+- 不要把 `8082` 直接暴露到公网；需要外网访问时走 NAS 自带的反向代理并启用 HTTPS。
 - 生产环境保持 `APP_DEBUG: "false"`（默认），否则异常页会输出调用栈与配置。
 - 定期导出备份 SQL；升级前先备份。
