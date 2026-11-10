@@ -34,10 +34,10 @@ docker compose logs -f app      # 看到「基线数据导入完成」「[migrat
 
 ## 三、方式 B：拉取已构建好的镜像
 
-如果这个仓库已经跑过 GitHub Actions 构建，镜像地址是：
+这个仓库已经跑过 GitHub Actions 构建，镜像是公开的，可直接匿名拉取：
 
 ```
-ghcr.io/<你的GitHub用户名>/wms:latest
+ghcr.io/jankxia/wms:latest        # 另有 :master、:sha-<提交号> 两个标签
 ```
 
 在「容器管理」里导入下面这份精简 compose（不用再构建）：
@@ -65,7 +65,7 @@ services:
       start_period: 30s
 
   app:
-    image: ghcr.io/<你的GitHub用户名>/wms:latest
+    image: ghcr.io/jankxia/wms:latest
     container_name: wms-app
     restart: unless-stopped
     depends_on:
@@ -91,21 +91,22 @@ volumes:
   wms_uploads:
 ```
 
-如果 GitHub 包权限是私有，先登录一次：
+镜像包默认是公开的，直接 `docker pull` 即可。只有你把它改成了私有包时才需要先登录一次：
 
 ```bash
-echo <你的GitHub_TOKEN> | docker login ghcr.io -u <你的GitHub用户名> --password-stdin
+echo <你的GitHub_TOKEN> | docker login ghcr.io -u jankxia --password-stdin
 ```
 
 ## 四、方式 C：导入镜像 tar 包
 
-CI 每次构建会产出一个 `wms-image-amd64.tar.gz`（GitHub Actions → Artifacts）。下载后：
+CI 每次构建会产出一个 Artifact：**仓库 → Actions → 选最新一次运行 → 页面底部 Artifacts → `wms-image-amd64`**（约 190 MB 的 zip，内含 `wms-image.tar.gz`）。下载后：
 
 ```bash
-gunzip -c wms-image-amd64.tar.gz | docker load     # 得到 wms:latest
+unzip wms-image-amd64.zip          # 解出 wms-image.tar.gz
+gunzip -c wms-image.tar.gz | docker load     # 得到 wms:export
 ```
 
-然后在「容器管理」里用上面方式 B 的 compose，把 `image:` 换成 `wms:latest` 并去掉 `build:` 即可。
+然后在「容器管理」里用上面方式 B 的 compose，把 `image:` 换成 `wms:export`（要改名就 `docker tag wms:export wms:latest`）并去掉 `build:` 即可。
 
 ## 五、首次登录与初始化
 
